@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="public/socket.io.client.js"></script>
+    <title>MTI840 - Raspberry App Listener</title>
+   <link rel="stylesheet" href="public/app.css">
+</head>
+<body>
+    <div class="container">
+        <div class="left">
+            <img src="public/left.jpg" alt="">
+        </div>
+        <div class="right">
+            <h1>
+                Listening incoming events ...
+            </h1>
+            <div class="events">
+            
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    const listEvents = [];
+    const listColors = [
+        {back: 'rgba(252, 13, 13, 0.596)', color: 'white'}, 
+        {back: 'rgb(209, 81, 209)', color: 'white'}, 
+        {back: 'rgb(93, 93, 255)', color: 'white'}, 
+        {back: 'rgb(104, 253, 104)', color: 'black'}
+    ]
+    const monthNameShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    const BROADCASTER_URL="http://localhost"
+    const IO_PORT="2000"
+    const IO_SPACE="broadcast"
+    const socket = io(`${BROADCASTER_URL}:${IO_PORT}/${IO_SPACE}`);
+
+    // Connect to a room
+    socket.emit('join-room', 'room-1');
+    // Listen on events published to the room
+    socket.on('receive-message', (data) => {
+        listEvents.push({...data, date: new Date(), color: listColors[Math.floor(Math.random() * 4)]});
+        displayEvents();
+    })
+
+    const displayEvents = () => {
+        const eventsContainer = document.querySelector('.events');
+        eventsContainer.innerHTML = "";
+        for (let index = 0; index < listEvents.length; index++) {
+            const event = listEvents[index];
+
+            // Generate and display new event in the UI
+            const eventDiv = document.createElement('div');
+            eventDiv.setAttribute('class', 'event');
+            eventDiv.style.backgroundColor = event.color.back;
+            eventDiv.style.color = event.color.color;
+            const formatedDate = `${new Date(event?.date).getDate()} ${monthNameShort[new Date(event?.date).getUTCMonth()]} ${new Date(event?.date).getFullYear()} ${new Date(event?.date).getHours()}:${new Date(event?.date).getMinutes()}:${new Date(event?.date).getSeconds()}`
+            eventDiv.innerText = `${formatedDate} : ${event?.message}`;
+            eventsContainer.appendChild(eventDiv)
+        }
+    }
+</script>
+</html>
